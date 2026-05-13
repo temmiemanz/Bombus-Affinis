@@ -813,13 +813,26 @@
 
   <script>
     function toggleAudio() {
-      const vid = document.getElementById('vid-right');
-      const btn = document.getElementById('audio-btn');
+      const vid   = document.getElementById('vid-right');
+      const btn   = document.getElementById('audio-btn');
       const icon  = document.getElementById('audio-icon');
       const label = document.getElementById('audio-label');
 
       if (vid.muted) {
-        vid.muted = false;
+        vid.muted  = false;
+        vid.volume = 1.0;
+        // re-call play() so the browser unlocks the audio track under strict autoplay policy
+        const p = vid.play();
+        if (p !== undefined) {
+          p.catch(() => {
+            // browser still blocked — leave muted, reset UI
+            vid.muted = true;
+            icon.textContent  = '♪';
+            label.textContent = 'unmute';
+            btn.style.color   = '';
+            btn.style.borderColor = '';
+          });
+        }
         icon.textContent  = '♬';
         label.textContent = 'mute';
         btn.style.color   = 'var(--honey-lt)';
