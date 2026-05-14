@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
   <style>
-    /* ── tokens ───────────────────────────────────────────────── */
     :root {
       --banner-w:    220px;
       --bg:          #0b0d0f;
@@ -43,7 +42,7 @@
       overflow-x: hidden;
     }
 
-    /* ── side banners ─────────────────────────────────────────── */
+    /* ── BANNERS ─────────────────────────────────────────────────── */
     .banner {
       position: fixed;
       top: 0;
@@ -51,25 +50,89 @@
       height: 100vh;
       overflow: hidden;
       z-index: 5;
-      /* inner shadow fades banner edges into bg */
     }
-    .banner-left  { left: 0;  border-right: 1px solid var(--border); }
-    .banner-right { right: 0; border-left:  1px solid var(--border); }
+    .banner-left  { left: 0; }
+    .banner-right { right: 0; }
 
-    /* edge fade — left banner fades right edge, right banner fades left edge */
+    /* video layer */
+    .banner video {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 115%;        /* extra height for parallax travel */
+      object-fit: cover;
+      object-position: center 28%;
+      opacity: 0.55;
+      filter: saturate(0.5) brightness(0.75);
+      will-change: transform;
+      transition: none;
+    }
+
+    /* animated amber gradient wash — sweeps up slowly */
+    .banner-grad {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(212,160,44,0.08) 0%,
+        rgba(212,160,44,0.00) 40%,
+        rgba(212,160,44,0.04) 70%,
+        rgba(212,160,44,0.14) 100%
+      );
+      animation: gradshift 8s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes gradshift {
+      0%   { opacity: 0.6; transform: translateY(0); }
+      100% { opacity: 1.0; transform: translateY(-6%); }
+    }
+
+    /* hexagon SVG watermark */
+    .banner-hex {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      opacity: 0;
+      animation: hexfadein 2s ease 0.5s forwards;
+      pointer-events: none;
+    }
+    @keyframes hexfadein {
+      to { opacity: 1; }
+    }
+    .banner-hex svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* scan line overlay */
+    .banner-scan {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 3px,
+        rgba(0,0,0,0.04) 3px,
+        rgba(0,0,0,0.04) 4px
+      );
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* vertical inner-edge vignette */
     .banner-left::after {
       content: '';
       position: absolute;
       inset: 0;
       background: linear-gradient(
         to right,
-        rgba(11,13,15,0.55) 0%,
-        rgba(11,13,15,0.0) 40%,
-        rgba(11,13,15,0.0) 70%,
-        rgba(11,13,15,0.7) 100%
+        rgba(11,13,15,0.6) 0%,
+        rgba(11,13,15,0.0) 55%,
+        rgba(11,13,15,0.75) 100%
       );
       pointer-events: none;
-      z-index: 2;
+      z-index: 4;
     }
     .banner-right::after {
       content: '';
@@ -77,44 +140,79 @@
       inset: 0;
       background: linear-gradient(
         to left,
-        rgba(11,13,15,0.55) 0%,
-        rgba(11,13,15,0.0) 40%,
-        rgba(11,13,15,0.0) 70%,
-        rgba(11,13,15,0.7) 100%
+        rgba(11,13,15,0.6) 0%,
+        rgba(11,13,15,0.0) 55%,
+        rgba(11,13,15,0.75) 100%
       );
       pointer-events: none;
-      z-index: 2;
+      z-index: 4;
     }
 
-    /* top + bottom fade on both */
+    /* top + bottom fade */
     .banner::before {
       content: '';
       position: absolute;
       inset: 0;
-      background:
-        linear-gradient(180deg,
-          rgba(11,13,15,0.85) 0%,
-          transparent 18%,
-          transparent 82%,
-          rgba(11,13,15,0.85) 100%
-        );
+      background: linear-gradient(180deg,
+        rgba(11,13,15,0.9) 0%,
+        transparent 20%,
+        transparent 78%,
+        rgba(11,13,15,0.9) 100%
+      );
       pointer-events: none;
-      z-index: 3;
+      z-index: 5;
     }
 
-    .banner video {
+    /* subtle vertical border line — glowing amber */
+    .banner-left  { border-right: 1px solid rgba(212,160,44,0.18); }
+    .banner-right { border-left:  1px solid rgba(212,160,44,0.18); }
+
+    /* glow strip on the inner edge */
+    .banner-glow {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%;
+      top: 0;
+      width: 1px;
       height: 100%;
-      /* crop: show the horizontal center of the 16:9 frame in a tall window */
-      object-fit: cover;
-      object-position: center 28%;
-      opacity: 0.70;
-      filter: saturate(0.65) brightness(0.85);
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(212,160,44,0.5) 30%,
+        rgba(232,184,75,0.9) 50%,
+        rgba(212,160,44,0.5) 70%,
+        transparent 100%
+      );
+      animation: glowpulse 4s ease-in-out infinite;
+      z-index: 6;
+      pointer-events: none;
+    }
+    .banner-left  .banner-glow { right: -1px; }
+    .banner-right .banner-glow { left: -1px; }
+
+    @keyframes glowpulse {
+      0%, 100% { opacity: 0.4; }
+      50%       { opacity: 1.0; }
     }
 
-    /* audio toggle button on right banner */
+    /* floating pollen-dot specks */
+    .banner-speck {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: var(--honey-lt);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 7;
+      animation: float-up linear infinite;
+    }
+    @keyframes float-up {
+      0%   { transform: translateY(100vh) translateX(0); opacity: 0; }
+      10%  { opacity: 0.6; }
+      90%  { opacity: 0.3; }
+      100% { transform: translateY(-80px) translateX(var(--drift)); opacity: 0; }
+    }
+
+    /* audio button */
     .audio-btn {
       position: absolute;
       bottom: 1.4rem;
@@ -130,7 +228,7 @@
       text-transform: uppercase;
       color: var(--honey);
       background: rgba(11,13,15,0.75);
-      border: 1px solid var(--border-gold, rgba(212,160,44,0.25));
+      border: 1px solid rgba(212,160,44,0.25);
       padding: 0.38rem 0.8rem;
       border-radius: var(--radius);
       cursor: pointer;
@@ -141,20 +239,35 @@
     .audio-btn:hover { background: var(--honey-dim); color: var(--honey-lt); }
     .audio-btn .icon { font-size: 0.75rem; }
 
-    /* ── main page — sits between banners ─────────────────────── */
+    /* label on left banner */
+    .banner-label {
+      position: absolute;
+      bottom: 1.4rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.55rem;
+      color: rgba(212,160,44,0.45);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      writing-mode: horizontal-tb;
+      text-align: center;
+    }
+
+    /* ── PAGE ────────────────────────────────────────────────────── */
     .page {
       position: relative;
       z-index: 10;
       max-width: 860px;
       margin: 0 auto;
-      /* horizontal padding keeps content clear of banners */
       padding: 4rem 2rem 6rem;
-      /* push content so banners don't overlap on wide screens */
       margin-left: calc(var(--banner-w) + max(0px, (100vw - var(--banner-w)*2 - 860px) / 2));
       margin-right: calc(var(--banner-w) + max(0px, (100vw - var(--banner-w)*2 - 860px) / 2));
     }
 
-    /* ── top bar ──────────────────────────────────────────────── */
+    /* ── TOP BAR ─────────────────────────────────────────────────── */
     .topbar {
       display: flex;
       align-items: center;
@@ -197,7 +310,7 @@
       50%       { opacity: 0.3; }
     }
 
-    /* ── hero ─────────────────────────────────────────────────── */
+    /* ── HERO ────────────────────────────────────────────────────── */
     .hero { margin-bottom: 4rem; }
     .hero-label {
       font-family: 'JetBrains Mono', monospace;
@@ -236,7 +349,7 @@
       line-height: 1.8;
     }
 
-    /* ── nav ──────────────────────────────────────────────────── */
+    /* ── NAV ─────────────────────────────────────────────────────── */
     .doc-nav {
       display: flex;
       gap: 0;
@@ -261,7 +374,7 @@
     .doc-nav a:last-child { border-right: none; }
     .doc-nav a:hover { color: var(--honey); background: var(--honey-glow); }
 
-    /* ── section ──────────────────────────────────────────────── */
+    /* ── SECTIONS ────────────────────────────────────────────────── */
     .doc-section { margin-bottom: 3.5rem; }
     .section-head {
       display: flex;
@@ -293,7 +406,6 @@
       margin-top: 0.2rem;
       letter-spacing: 0.02em;
     }
-
     .body-text {
       font-size: 0.93rem;
       color: var(--text-mid);
@@ -302,7 +414,6 @@
     }
     .body-text strong { color: var(--text-hi); font-weight: 600; }
     .body-text em     { color: var(--honey-lt); font-style: italic; }
-
     .callout {
       border-left: 2px solid var(--honey);
       padding: 0.9rem 1.2rem;
@@ -315,7 +426,7 @@
     }
     .callout strong { color: var(--honey-lt); }
 
-    /* ── stage grid ───────────────────────────────────────────── */
+    /* ── STAGE GRID ──────────────────────────────────────────────── */
     .stage-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
@@ -349,7 +460,7 @@
     }
     .stage-body { font-size: 0.82rem; color: var(--text-mid); line-height: 1.65; }
 
-    /* ── item rows ────────────────────────────────────────────── */
+    /* ── ITEM ROWS ───────────────────────────────────────────────── */
     .item-list {
       display: flex;
       flex-direction: column;
@@ -381,7 +492,7 @@
     .item-body { padding: 1rem 1.2rem; font-size: 0.83rem; color: var(--text-mid); line-height: 1.65; }
     .item-body strong { color: var(--text-hi); }
 
-    /* ── threat grid ──────────────────────────────────────────── */
+    /* ── THREAT GRID ─────────────────────────────────────────────── */
     .threat-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -415,7 +526,7 @@
     .threat-name { font-size: 0.88rem; font-weight: 600; color: var(--text-hi); margin-bottom: 0.45rem; }
     .threat-desc { font-size: 0.8rem; color: var(--text-mid); line-height: 1.6; }
 
-    /* ── fact list ────────────────────────────────────────────── */
+    /* ── FACT LIST ───────────────────────────────────────────────── */
     .fact-list {
       display: flex;
       flex-direction: column;
@@ -449,7 +560,7 @@
 
     .ruled { height: 1px; background: var(--border); margin: 2rem 0; }
 
-    /* ── footer ───────────────────────────────────────────────── */
+    /* ── FOOTER ──────────────────────────────────────────────────── */
     .footer {
       padding-top: 2rem;
       border-top: 1px solid var(--border);
@@ -462,14 +573,51 @@
     .footer-left { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.9rem; color: var(--text-lo); }
     .footer-right { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-lo); letter-spacing: 0.1em; text-align: right; }
 
-    /* ── responsive ───────────────────────────────────────────── */
-    @media (max-width: 1100px) {
-      :root { --banner-w: 160px; }
-    }
+    /* ── MOBILE ──────────────────────────────────────────────────── */
+    /* mobile bg: animated amber gradient on transparent/dark body */
     @media (max-width: 860px) {
       .banner { display: none; }
-      .page { margin-left: auto; margin-right: auto; padding: 2.5rem 1.2rem 4rem; }
+
+      /* gentle ambient bg — replaces banners entirely */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(ellipse 80% 50% at 20% 10%, rgba(212,160,44,0.07) 0%, transparent 60%),
+          radial-gradient(ellipse 60% 40% at 80% 90%, rgba(212,160,44,0.05) 0%, transparent 60%);
+        animation: mobileglow 10s ease-in-out infinite alternate;
+        pointer-events: none;
+        z-index: 0;
+      }
+      @keyframes mobileglow {
+        0%   { opacity: 0.6; }
+        100% { opacity: 1.0; }
+      }
+
+      /* subtle floating specks on mobile too */
+      body::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: transparent;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .page {
+        margin-left: auto;
+        margin-right: auto;
+        padding: 2.5rem 1.2rem 4rem;
+        position: relative;
+        z-index: 1;
+      }
     }
+
+    @media (max-width: 1100px) and (min-width: 861px) {
+      :root { --banner-w: 160px; }
+    }
+
     @media (max-width: 640px) {
       .doc-nav { flex-wrap: wrap; }
       .doc-nav a { flex: none; width: 50%; border-bottom: 1px solid var(--border); }
@@ -486,36 +634,83 @@
 </head>
 <body>
 
-  <!-- left banner — muted ------------------------------------------------ -->
+  <!-- LEFT BANNER -->
   <aside class="banner banner-left" aria-hidden="true">
-    <video autoplay loop muted playsinline>
+    <video id="vid-left" autoplay loop muted playsinline>
       <source src="background.mp4" type="video/mp4">
     </video>
+    <div class="banner-grad"></div>
+    <div class="banner-hex">
+      <svg viewBox="0 0 220 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="hex-l" x="0" y="0" width="36" height="41.57" patternUnits="userSpaceOnUse">
+            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11"
+              fill="none" stroke="rgba(212,160,44,0.12)" stroke-width="0.75"/>
+          </pattern>
+          <pattern id="hex-l2" x="18" y="20.78" width="36" height="41.57" patternUnits="userSpaceOnUse">
+            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11"
+              fill="none" stroke="rgba(212,160,44,0.07)" stroke-width="0.75"/>
+          </pattern>
+        </defs>
+        <rect width="220" height="900" fill="url(#hex-l)"/>
+        <rect width="220" height="900" fill="url(#hex-l2)"/>
+      </svg>
+    </div>
+    <div class="banner-scan"></div>
+    <div class="banner-glow"></div>
+    <!-- floating specks -->
+    <div class="banner-speck" style="left:18%;animation-duration:9s;animation-delay:0s;--drift:8px;"></div>
+    <div class="banner-speck" style="left:55%;animation-duration:13s;animation-delay:2.5s;--drift:-6px;"></div>
+    <div class="banner-speck" style="left:78%;animation-duration:7s;animation-delay:5s;--drift:4px;"></div>
+    <div class="banner-speck" style="left:35%;animation-duration:11s;animation-delay:1s;--drift:-10px;"></div>
+    <div class="banner-speck" style="left:62%;animation-duration:15s;animation-delay:7s;--drift:12px;"></div>
+    <div class="banner-label">Bombus affinis</div>
   </aside>
 
-  <!-- right banner — starts muted, toggle for audio ---------------------- -->
+  <!-- RIGHT BANNER -->
   <aside class="banner banner-right" aria-label="Decorative video with audio toggle">
     <video id="vid-right" autoplay loop muted playsinline>
       <source src="background.mp4" type="video/mp4">
     </video>
+    <div class="banner-grad"></div>
+    <div class="banner-hex">
+      <svg viewBox="0 0 220 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="hex-r" x="0" y="0" width="36" height="41.57" patternUnits="userSpaceOnUse">
+            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11"
+              fill="none" stroke="rgba(212,160,44,0.12)" stroke-width="0.75"/>
+          </pattern>
+          <pattern id="hex-r2" x="18" y="20.78" width="36" height="41.57" patternUnits="userSpaceOnUse">
+            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11"
+              fill="none" stroke="rgba(212,160,44,0.07)" stroke-width="0.75"/>
+          </pattern>
+        </defs>
+        <rect width="220" height="900" fill="url(#hex-r)"/>
+        <rect width="220" height="900" fill="url(#hex-r2)"/>
+      </svg>
+    </div>
+    <div class="banner-scan"></div>
+    <div class="banner-glow"></div>
+    <!-- floating specks -->
+    <div class="banner-speck" style="left:22%;animation-duration:10s;animation-delay:1.5s;--drift:-7px;"></div>
+    <div class="banner-speck" style="left:48%;animation-duration:8s;animation-delay:3s;--drift:9px;"></div>
+    <div class="banner-speck" style="left:70%;animation-duration:14s;animation-delay:0.5s;--drift:-5px;"></div>
+    <div class="banner-speck" style="left:30%;animation-duration:12s;animation-delay:6s;--drift:11px;"></div>
+    <div class="banner-speck" style="left:85%;animation-duration:9s;animation-delay:4s;--drift:-8px;"></div>
     <button class="audio-btn" id="audio-btn" onclick="toggleAudio()" aria-label="Toggle audio">
       <span class="icon" id="audio-icon">♪</span>
       <span id="audio-label">unmute</span>
     </button>
   </aside>
 
-  <!-- ── main content ─────────────────────────────────────────────────── -->
+  <!-- ── MAIN ─────────────────────────────────────────────────────── -->
   <div class="page">
 
-    <!-- top bar ---------------------------------------------------------- -->
     <div class="topbar">
-      <div class="topbar-left">
-        Endangered Species / Environmental Issue Project &nbsp;·&nbsp; Species Profile
-      </div>
+      <div class="topbar-left">Endangered Species / Environmental Issue Project &nbsp;·&nbsp; Species Profile</div>
       <div class="topbar-badge">Federally Endangered — ESA 2017</div>
     </div>
 
-    <!-- hero ------------------------------------------------------------- -->
     <header class="hero" id="top">
       <div class="hero-label">01 &nbsp;/&nbsp; Species Overview</div>
       <h1>The Rusty-Patched<br><em>Bumble Bee</em></h1>
@@ -531,7 +726,6 @@
       </p>
     </header>
 
-    <!-- nav -------------------------------------------------------------- -->
     <nav class="doc-nav" aria-label="Section navigation">
       <a href="#habitat">Habitat &amp; Niche</a>
       <a href="#food">Food &amp; Interactions</a>
@@ -540,8 +734,7 @@
       <a href="#facts">Other Facts</a>
     </nav>
 
-
-    <!-- 01 HABITAT ------------------------------------------------------- -->
+    <!-- 01 HABITAT -->
     <section class="doc-section" id="habitat">
       <div class="section-head">
         <div class="section-num">01</div>
@@ -550,7 +743,6 @@
           <p>Where it lives · Life cycle · Migration patterns</p>
         </div>
       </div>
-
       <p class="body-text">
         <em>Bombus affinis</em> belongs to open landscapes — tallgrass prairies, unmowed meadows,
         woodland edges where sunlight reaches the ground long enough for wildflowers to take hold.
@@ -558,14 +750,12 @@
         on a rotating calendar of bloom: something must be flowering from April through October
         or a colony cannot store the resources needed to produce new queens before winter.
       </p>
-
       <div class="callout">
         <strong>On migration:</strong> <em>B. affinis</em> does not migrate in the conventional sense.
         However, mated queens perform a seasonal dispersal of their own — emerging from underground
         hibernation in early spring, sometimes traveling several kilometers to locate a suitable nest
         site before establishing a new colony entirely alone.
       </div>
-
       <div class="stage-grid">
         <div class="stage-cell">
           <div class="stage-tag">Stage 01 · Egg</div>
@@ -590,8 +780,7 @@
       </div>
     </section>
 
-
-    <!-- 02 FOOD ---------------------------------------------------------- -->
+    <!-- 02 FOOD -->
     <section class="doc-section" id="food">
       <div class="section-head">
         <div class="section-num">02</div>
@@ -600,7 +789,6 @@
           <p>Diet per life stage · Foraging behavior · Predators</p>
         </div>
       </div>
-
       <p class="body-text">
         <em>B. affinis</em> is a <strong>generalist forager</strong> — it visits dozens of wildflower
         species rather than depending on any single plant. Clovers, goldenrod, wild bergamot, bee balm,
@@ -608,14 +796,12 @@
         fragmentation; today it means the bee can survive in patchwork landscapes as long as
         <em>something</em> is blooming without a gap from spring through fall.
       </p>
-
       <div class="callout">
         <strong>Buzz pollination (sonication):</strong> Workers grab a flower and vibrate their flight
         muscles at a precise frequency, shaking pollen loose from anthers with pores too small for
         passive collection. Tomatoes, blueberries, and many native wildflowers require this technique.
         Without bumble bees performing it, those plants produce significantly less fruit and seed.
       </div>
-
       <div class="item-list">
         <div class="item-row">
           <div class="item-label">Egg<span class="item-label-sub">No autonomous feeding</span></div>
@@ -634,10 +820,8 @@
           <div class="item-body">Spring queens forage to provision the first brood. Late-summer mated queens gorge on nectar before hibernation, building fat reserves large enough to sustain five to six months underground with no food source whatsoever.</div>
         </div>
       </div>
-
       <div class="ruled"></div>
       <p class="body-text" style="font-size:0.8rem; color:var(--text-lo); margin-bottom:1rem; letter-spacing:0.06em; text-transform:uppercase; font-weight:500;">Predators &amp; Parasites</p>
-
       <div class="threat-grid">
         <div class="threat-cell t-warn">
           <div class="threat-tag">Arthropod</div>
@@ -662,8 +846,7 @@
       </div>
     </section>
 
-
-    <!-- 03 OBSTACLES ----------------------------------------------------- -->
+    <!-- 03 OBSTACLES -->
     <section class="doc-section" id="obstacles">
       <div class="section-head">
         <div class="section-num">03</div>
@@ -672,13 +855,11 @@
           <p>Natural threats · Human-caused pressures · All life stages</p>
         </div>
       </div>
-
       <p class="body-text">
         The 87% population collapse over roughly two decades isn't the result of a single event —
         it's a convergence of pressures hitting simultaneously. Some have been building for over a
         century; others appeared abruptly in the 1990s.
       </p>
-
       <div class="threat-grid">
         <div class="threat-cell t-danger">
           <div class="threat-tag">Primary / Human</div>
@@ -713,8 +894,7 @@
       </div>
     </section>
 
-
-    <!-- 04 ADAPTATIONS --------------------------------------------------- -->
+    <!-- 04 ADAPTATIONS -->
     <section class="doc-section" id="adaptations">
       <div class="section-head">
         <div class="section-num">04</div>
@@ -723,14 +903,12 @@
           <p>Traits that enhance survival &amp; reproduction across all life stages</p>
         </div>
       </div>
-
       <p class="body-text">
         Each trait below evolved across millions of years of selection pressure.
         Several of them directly conflict with the threats described in Section 03 — which
         is part of why the population trajectory has been so steep. The bee is well-adapted
         to its historical environment; it is not adapted to the current one.
       </p>
-
       <div class="item-list">
         <div class="item-row">
           <div class="item-label">Dense Pile<span class="item-label-sub">Adult — all castes</span></div>
@@ -763,8 +941,7 @@
       </div>
     </section>
 
-
-    <!-- 05 FACTS --------------------------------------------------------- -->
+    <!-- 05 FACTS -->
     <section class="doc-section" id="facts">
       <div class="section-head">
         <div class="section-num">05</div>
@@ -773,7 +950,6 @@
           <p>Additional context worth knowing</p>
         </div>
       </div>
-
       <div class="fact-list">
         <div class="fact-row">
           <div class="fact-num">F1</div>
@@ -802,30 +978,39 @@
       </div>
     </section>
 
-
-    <!-- footer ----------------------------------------------------------- -->
     <footer class="footer">
       <div class="footer-left"><em>Bombus affinis</em> — Rusty-Patched Bumble Bee</div>
       <div class="footer-right">Endangered Species / Environmental Issue Project<br>Due: Friday, May 19 &nbsp;·&nbsp; 26 pts summative</div>
     </footer>
 
-  </div><!-- .page -->
+  </div>
 
   <script>
+    /* ── parallax scroll on banner videos ── */
+    const vidLeft  = document.getElementById('vid-left');
+    const vidRight = document.getElementById('vid-right');
+
+    function onScroll() {
+      const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
+      const shift = pct * -8; // max 8% upward shift
+      if (vidLeft)  vidLeft.style.transform  = `translateY(${shift}%)`;
+      if (vidRight) vidRight.style.transform = `translateY(${shift}%)`;
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    /* ── audio toggle ── */
     function toggleAudio() {
       const vid   = document.getElementById('vid-right');
       const btn   = document.getElementById('audio-btn');
       const icon  = document.getElementById('audio-icon');
       const label = document.getElementById('audio-label');
-
       if (vid.muted) {
         vid.muted  = false;
         vid.volume = 1.0;
-        // re-call play() so the browser unlocks the audio track under strict autoplay policy
         const p = vid.play();
         if (p !== undefined) {
           p.catch(() => {
-            // browser still blocked — leave muted, reset UI
             vid.muted = true;
             icon.textContent  = '♪';
             label.textContent = 'unmute';
