@@ -42,69 +42,108 @@
       overflow-x: hidden;
     }
 
-    /* ── BANNERS ─────────────────────────────────────────────────── */
+    /* ── SINGLE VIDEO — fixed full-viewport, always behind everything ── */
+    #bg-video {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 28%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* on desktop: dim only the CENTER strip so page content is readable,
+       banners stay at full brightness                                      */
+    #bg-video-mask {
+      position: fixed;
+      top: 0;
+      left: var(--banner-w);
+      right: var(--banner-w);
+      bottom: 0;
+      background: rgba(11,13,15,0.82);
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* ── BANNER OVERLAYS — decorative only, no video inside ── */
     .banner {
       position: fixed;
       top: 0;
       width: var(--banner-w);
       height: 100vh;
       overflow: hidden;
-      z-index: 5;
+      z-index: 6;
+      pointer-events: none;
     }
-    .banner-left  { left: 0; }
-    .banner-right { right: 0; }
+    .banner-left  { left: 0;  border-right: 1px solid rgba(212,160,44,0.18); }
+    .banner-right { right: 0; border-left:  1px solid rgba(212,160,44,0.18); }
 
-    /* video layer — fully visible, no dimming */
-    .banner video {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 115%;
-      object-fit: cover;
-      object-position: center 28%;
-      opacity: 1;
-      will-change: transform;
-      transition: none;
-    }
-
-    /* animated amber gradient wash — sweeps up slowly */
-    .banner-grad {
+    /* top + bottom fade on each banner */
+    .banner::before {
+      content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(
-        180deg,
-        rgba(212,160,44,0.08) 0%,
-        rgba(212,160,44,0.00) 40%,
-        rgba(212,160,44,0.04) 70%,
-        rgba(212,160,44,0.14) 100%
+      background: linear-gradient(180deg,
+        rgba(11,13,15,0.6) 0%,
+        transparent 15%,
+        transparent 85%,
+        rgba(11,13,15,0.6) 100%
       );
-      animation: gradshift 8s ease-in-out infinite alternate;
       pointer-events: none;
       z-index: 1;
     }
-    @keyframes gradshift {
-      0%   { opacity: 0.6; transform: translateY(0); }
-      100% { opacity: 1.0; transform: translateY(-6%); }
+
+    /* inner-edge softener */
+    .banner-left::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to right, transparent 70%, rgba(11,13,15,0.5) 100%);
+      pointer-events: none;
+      z-index: 2;
+    }
+    .banner-right::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to left, transparent 70%, rgba(11,13,15,0.5) 100%);
+      pointer-events: none;
+      z-index: 2;
     }
 
-    /* hexagon SVG watermark */
+    /* animated amber wash */
+    .banner-grad {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg,
+        rgba(212,160,44,0.06) 0%,
+        rgba(212,160,44,0.00) 45%,
+        rgba(212,160,44,0.10) 100%
+      );
+      animation: gradshift 8s ease-in-out infinite alternate;
+      pointer-events: none;
+      z-index: 3;
+    }
+    @keyframes gradshift {
+      0%   { opacity: 0.5; }
+      100% { opacity: 1.0; }
+    }
+
+    /* hexagon watermark */
     .banner-hex {
       position: absolute;
       inset: 0;
-      z-index: 2;
+      z-index: 4;
       opacity: 0;
       animation: hexfadein 2s ease 0.5s forwards;
       pointer-events: none;
     }
-    @keyframes hexfadein {
-      to { opacity: 1; }
-    }
-    .banner-hex svg {
-      width: 100%;
-      height: 100%;
-    }
+    @keyframes hexfadein { to { opacity: 1; } }
+    .banner-hex svg { width: 100%; height: 100%; }
 
-    /* scan line overlay */
+    /* scan lines */
     .banner-scan {
       position: absolute;
       inset: 0;
@@ -116,66 +155,16 @@
         rgba(0,0,0,0.04) 4px
       );
       pointer-events: none;
-      z-index: 3;
-    }
-
-    /* very light inner-edge blend — just enough to not clip hard */
-    .banner-left::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        to right,
-        rgba(11,13,15,0.15) 0%,
-        rgba(11,13,15,0.0) 30%,
-        rgba(11,13,15,0.0) 70%,
-        rgba(11,13,15,0.35) 100%
-      );
-      pointer-events: none;
-      z-index: 4;
-    }
-    .banner-right::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        to left,
-        rgba(11,13,15,0.15) 0%,
-        rgba(11,13,15,0.0) 30%,
-        rgba(11,13,15,0.0) 70%,
-        rgba(11,13,15,0.35) 100%
-      );
-      pointer-events: none;
-      z-index: 4;
-    }
-
-    /* minimal top + bottom fade */
-    .banner::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg,
-        rgba(11,13,15,0.5) 0%,
-        transparent 12%,
-        transparent 88%,
-        rgba(11,13,15,0.5) 100%
-      );
-      pointer-events: none;
       z-index: 5;
     }
 
-    /* subtle vertical border line — glowing amber */
-    .banner-left  { border-right: 1px solid rgba(212,160,44,0.18); }
-    .banner-right { border-left:  1px solid rgba(212,160,44,0.18); }
-
-    /* glow strip on the inner edge */
+    /* glowing inner edge strip */
     .banner-glow {
       position: absolute;
       top: 0;
       width: 1px;
       height: 100%;
-      background: linear-gradient(
-        180deg,
+      background: linear-gradient(180deg,
         transparent 0%,
         rgba(212,160,44,0.5) 30%,
         rgba(232,184,75,0.9) 50%,
@@ -187,18 +176,16 @@
       pointer-events: none;
     }
     .banner-left  .banner-glow { right: -1px; }
-    .banner-right .banner-glow { left: -1px; }
-
+    .banner-right .banner-glow { left:  -1px; }
     @keyframes glowpulse {
       0%, 100% { opacity: 0.4; }
       50%       { opacity: 1.0; }
     }
 
-    /* floating pollen-dot specks */
+    /* floating pollen specks */
     .banner-speck {
       position: absolute;
-      width: 2px;
-      height: 2px;
+      width: 2px; height: 2px;
       border-radius: 50%;
       background: var(--honey-lt);
       opacity: 0;
@@ -213,7 +200,8 @@
       100% { transform: translateY(-80px) translateX(var(--drift)); opacity: 0; }
     }
 
-    /* audio button */
+    /* audio button — pointer-events re-enabled for right banner only */
+    .banner-right { pointer-events: none; }
     .audio-btn {
       position: absolute;
       bottom: 1.4rem;
@@ -236,6 +224,7 @@
       white-space: nowrap;
       transition: background 0.18s, color 0.18s;
       backdrop-filter: blur(6px);
+      pointer-events: all;
     }
     .audio-btn:hover { background: var(--honey-dim); color: var(--honey-lt); }
     .audio-btn .icon { font-size: 0.75rem; }
@@ -249,11 +238,10 @@
       z-index: 10;
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.55rem;
-      color: rgba(212,160,44,0.45);
+      color: rgba(212,160,44,0.5);
       letter-spacing: 0.18em;
       text-transform: uppercase;
       white-space: nowrap;
-      writing-mode: horizontal-tb;
       text-align: center;
     }
 
@@ -576,30 +564,22 @@
 
     /* ── MOBILE ──────────────────────────────────────────────────── */
     @media (max-width: 860px) {
-      /* hide sidebar banners */
+      /* hide the side banner overlays */
       .banner { display: none; }
 
-      /* full-screen video background at 0.5 opacity */
-      #mobile-bg {
-        display: block;
-        position: fixed;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center 28%;
-        opacity: 0.50;
-        z-index: 0;
-        pointer-events: none;
-      }
+      /* show full video at 0.5 opacity — the single bg-video covers it */
+      #bg-video { opacity: 0.5; }
 
-      /* dark overlay so text stays readable */
+      /* hide center dimmer — full width is all video */
+      #bg-video-mask { display: none; }
+
+      /* thin dark overlay so text stays legible */
       #mobile-overlay {
         display: block;
         position: fixed;
         inset: 0;
-        background: rgba(11,13,15,0.45);
-        z-index: 1;
+        background: rgba(11,13,15,0.5);
+        z-index: 2;
         pointer-events: none;
       }
 
@@ -608,13 +588,17 @@
         margin-right: auto;
         padding: 2.5rem 1.2rem 4rem;
         position: relative;
-        z-index: 2;
+        z-index: 3;
       }
     }
 
-    /* hide mobile elements on desktop */
     @media (min-width: 861px) {
-      #mobile-bg, #mobile-overlay { display: none; }
+      #mobile-overlay { display: none; }
+      #bg-video { opacity: 1; }
+    }
+
+    @media (max-width: 1100px) and (min-width: 861px) {
+      :root { --banner-w: 200px; }
     }
 
     @media (max-width: 1100px) and (min-width: 861px) {
@@ -637,37 +621,36 @@
 </head>
 <body>
 
-  <!-- mobile full-screen background video (hidden on desktop via CSS) -->
-  <video id="mobile-bg" autoplay loop muted playsinline>
+  <!-- ONE video — plays once, covers full viewport, never duplicated -->
+  <video id="bg-video" autoplay loop muted playsinline>
     <source src="background.mp4" type="video/mp4">
   </video>
+
+  <!-- center dimmer (desktop only) — darkens the page column, not the banners -->
+  <div id="bg-video-mask"></div>
+
+  <!-- mobile text-legibility overlay -->
   <div id="mobile-overlay"></div>
 
-  <!-- LEFT BANNER -->
+  <!-- LEFT BANNER — decorative overlays only, no video -->
   <aside class="banner banner-left" aria-hidden="true">
-    <video id="vid-left" autoplay loop muted playsinline>
-      <source src="background.mp4" type="video/mp4">
-    </video>
     <div class="banner-grad"></div>
     <div class="banner-hex">
-      <svg viewBox="0 0 220 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 280 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="hex-l" x="0" y="0" width="36" height="41.57" patternUnits="userSpaceOnUse">
-            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11"
-              fill="none" stroke="rgba(212,160,44,0.12)" stroke-width="0.75"/>
+            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11" fill="none" stroke="rgba(212,160,44,0.14)" stroke-width="0.75"/>
           </pattern>
           <pattern id="hex-l2" x="18" y="20.78" width="36" height="41.57" patternUnits="userSpaceOnUse">
-            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11"
-              fill="none" stroke="rgba(212,160,44,0.07)" stroke-width="0.75"/>
+            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11" fill="none" stroke="rgba(212,160,44,0.07)" stroke-width="0.75"/>
           </pattern>
         </defs>
-        <rect width="220" height="900" fill="url(#hex-l)"/>
-        <rect width="220" height="900" fill="url(#hex-l2)"/>
+        <rect width="280" height="900" fill="url(#hex-l)"/>
+        <rect width="280" height="900" fill="url(#hex-l2)"/>
       </svg>
     </div>
     <div class="banner-scan"></div>
     <div class="banner-glow"></div>
-    <!-- floating specks -->
     <div class="banner-speck" style="left:18%;animation-duration:9s;animation-delay:0s;--drift:8px;"></div>
     <div class="banner-speck" style="left:55%;animation-duration:13s;animation-delay:2.5s;--drift:-6px;"></div>
     <div class="banner-speck" style="left:78%;animation-duration:7s;animation-delay:5s;--drift:4px;"></div>
@@ -676,31 +659,25 @@
     <div class="banner-label">Bombus affinis</div>
   </aside>
 
-  <!-- RIGHT BANNER -->
-  <aside class="banner banner-right" aria-label="Decorative video with audio toggle">
-    <video id="vid-right" autoplay loop muted playsinline>
-      <source src="background.mp4" type="video/mp4">
-    </video>
+  <!-- RIGHT BANNER — decorative overlays only, no video -->
+  <aside class="banner banner-right" aria-label="Video banner with audio toggle">
     <div class="banner-grad"></div>
     <div class="banner-hex">
-      <svg viewBox="0 0 220 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 280 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="hex-r" x="0" y="0" width="36" height="41.57" patternUnits="userSpaceOnUse">
-            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11"
-              fill="none" stroke="rgba(212,160,44,0.12)" stroke-width="0.75"/>
+            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11" fill="none" stroke="rgba(212,160,44,0.14)" stroke-width="0.75"/>
           </pattern>
           <pattern id="hex-r2" x="18" y="20.78" width="36" height="41.57" patternUnits="userSpaceOnUse">
-            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11"
-              fill="none" stroke="rgba(212,160,44,0.07)" stroke-width="0.75"/>
+            <polygon points="18,2 34,11 34,30 18,39 2,30 2,11" fill="none" stroke="rgba(212,160,44,0.07)" stroke-width="0.75"/>
           </pattern>
         </defs>
-        <rect width="220" height="900" fill="url(#hex-r)"/>
-        <rect width="220" height="900" fill="url(#hex-r2)"/>
+        <rect width="280" height="900" fill="url(#hex-r)"/>
+        <rect width="280" height="900" fill="url(#hex-r2)"/>
       </svg>
     </div>
     <div class="banner-scan"></div>
     <div class="banner-glow"></div>
-    <!-- floating specks -->
     <div class="banner-speck" style="left:22%;animation-duration:10s;animation-delay:1.5s;--drift:-7px;"></div>
     <div class="banner-speck" style="left:48%;animation-duration:8s;animation-delay:3s;--drift:9px;"></div>
     <div class="banner-speck" style="left:70%;animation-duration:14s;animation-delay:0.5s;--drift:-5px;"></div>
@@ -995,55 +972,25 @@
   </div>
 
   <script>
-    /* ── video references ── */
-    const vidLeft   = document.getElementById('vid-left');
-    const vidRight  = document.getElementById('vid-right');
-    const vidMobile = document.getElementById('mobile-bg');
-    const allVids   = [vidLeft, vidRight, vidMobile].filter(Boolean);
+    const vid = document.getElementById('bg-video');
 
-    /* ── force play + sync all videos ── */
-    function forcePlay() {
-      /* pick a reference time — sync everyone to vid-left if loaded, else 0 */
-      const refTime = (vidLeft && vidLeft.readyState >= 1) ? vidLeft.currentTime : 0;
-      allVids.forEach(v => {
-        /* sync time so they're frame-identical */
-        if (Math.abs(v.currentTime - refTime) > 0.1) v.currentTime = refTime;
-        const p = v.play();
-        if (p !== undefined) p.catch(() => {/* browser blocked, muted autoplay should still work */});
-      });
+    /* Force play immediately and on any user gesture.
+       Browsers may block autoplay until a gesture — muted autoplay
+       is almost universally allowed, so this should rarely be needed. */
+    function tryPlay() {
+      if (!vid) return;
+      const p = vid.play();
+      if (p !== undefined) p.catch(() => {});
     }
 
-    /* try immediately */
-    forcePlay();
-
-    /* also fire once the DOM is fully interactive, and after first user gesture */
-    document.addEventListener('DOMContentLoaded', forcePlay);
-    document.addEventListener('click', forcePlay, { once: true });
-    document.addEventListener('touchstart', forcePlay, { once: true });
-
-    /* keep them in sync — drift check every 2s */
-    setInterval(() => {
-      if (!vidLeft || !vidRight) return;
-      const diff = Math.abs(vidLeft.currentTime - vidRight.currentTime);
-      if (diff > 0.15) vidRight.currentTime = vidLeft.currentTime;
-      if (vidMobile) {
-        const diffM = Math.abs(vidLeft.currentTime - vidMobile.currentTime);
-        if (diffM > 0.15) vidMobile.currentTime = vidLeft.currentTime;
-      }
-    }, 2000);
-
-    /* ── parallax on desktop banners ── */
-    function onScroll() {
-      const pct   = window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight);
-      const shift = pct * -8;
-      if (vidLeft)  vidLeft.style.transform  = `translateY(${shift}%)`;
-      if (vidRight) vidRight.style.transform = `translateY(${shift}%)`;
-    }
-    window.addEventListener('scroll', onScroll, { passive: true });
+    tryPlay();
+    document.addEventListener('DOMContentLoaded', tryPlay);
+    document.addEventListener('click',      tryPlay, { once: true });
+    document.addEventListener('touchstart', tryPlay, { once: true });
+    document.addEventListener('keydown',    tryPlay, { once: true });
 
     /* ── audio toggle ── */
     function toggleAudio() {
-      const vid   = vidRight;
       const btn   = document.getElementById('audio-btn');
       const icon  = document.getElementById('audio-icon');
       const label = document.getElementById('audio-label');
@@ -1057,20 +1004,20 @@
             vid.muted = true;
             icon.textContent  = '♪';
             label.textContent = 'unmute';
-            btn.style.color   = '';
-            btn.style.borderColor = '';
+            btn.style.color        = '';
+            btn.style.borderColor  = '';
           });
         }
         icon.textContent  = '♬';
         label.textContent = 'mute';
-        btn.style.color   = 'var(--honey-lt)';
+        btn.style.color       = 'var(--honey-lt)';
         btn.style.borderColor = 'rgba(232,184,75,0.45)';
       } else {
         vid.muted = true;
         icon.textContent  = '♪';
         label.textContent = 'unmute';
-        btn.style.color   = '';
-        btn.style.borderColor = '';
+        btn.style.color        = '';
+        btn.style.borderColor  = '';
       }
     }
   </script>
