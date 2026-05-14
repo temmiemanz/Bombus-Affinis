@@ -10,7 +10,7 @@
 
   <style>
     :root {
-      --banner-w:    220px;
+      --banner-w:    280px;
       --bg:          #0b0d0f;
       --bg-2:        #111418;
       --bg-3:        #181d23;
@@ -54,16 +54,15 @@
     .banner-left  { left: 0; }
     .banner-right { right: 0; }
 
-    /* video layer */
+    /* video layer — fully visible, no dimming */
     .banner video {
       position: absolute;
       top: 0; left: 0;
       width: 100%;
-      height: 115%;        /* extra height for parallax travel */
+      height: 115%;
       object-fit: cover;
       object-position: center 28%;
-      opacity: 0.55;
-      filter: saturate(0.5) brightness(0.75);
+      opacity: 1;
       will-change: transform;
       transition: none;
     }
@@ -120,16 +119,17 @@
       z-index: 3;
     }
 
-    /* vertical inner-edge vignette */
+    /* very light inner-edge blend — just enough to not clip hard */
     .banner-left::after {
       content: '';
       position: absolute;
       inset: 0;
       background: linear-gradient(
         to right,
-        rgba(11,13,15,0.6) 0%,
-        rgba(11,13,15,0.0) 55%,
-        rgba(11,13,15,0.75) 100%
+        rgba(11,13,15,0.15) 0%,
+        rgba(11,13,15,0.0) 30%,
+        rgba(11,13,15,0.0) 70%,
+        rgba(11,13,15,0.35) 100%
       );
       pointer-events: none;
       z-index: 4;
@@ -140,24 +140,25 @@
       inset: 0;
       background: linear-gradient(
         to left,
-        rgba(11,13,15,0.6) 0%,
-        rgba(11,13,15,0.0) 55%,
-        rgba(11,13,15,0.75) 100%
+        rgba(11,13,15,0.15) 0%,
+        rgba(11,13,15,0.0) 30%,
+        rgba(11,13,15,0.0) 70%,
+        rgba(11,13,15,0.35) 100%
       );
       pointer-events: none;
       z-index: 4;
     }
 
-    /* top + bottom fade */
+    /* minimal top + bottom fade */
     .banner::before {
       content: '';
       position: absolute;
       inset: 0;
       background: linear-gradient(180deg,
-        rgba(11,13,15,0.9) 0%,
-        transparent 20%,
-        transparent 78%,
-        rgba(11,13,15,0.9) 100%
+        rgba(11,13,15,0.5) 0%,
+        transparent 12%,
+        transparent 88%,
+        rgba(11,13,15,0.5) 100%
       );
       pointer-events: none;
       z-index: 5;
@@ -574,35 +575,32 @@
     .footer-right { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-lo); letter-spacing: 0.1em; text-align: right; }
 
     /* ── MOBILE ──────────────────────────────────────────────────── */
-    /* mobile bg: animated amber gradient on transparent/dark body */
     @media (max-width: 860px) {
+      /* hide sidebar banners */
       .banner { display: none; }
 
-      /* gentle ambient bg — replaces banners entirely */
-      body::before {
-        content: '';
+      /* full-screen video background at 0.5 opacity */
+      #mobile-bg {
+        display: block;
         position: fixed;
         inset: 0;
-        background:
-          radial-gradient(ellipse 80% 50% at 20% 10%, rgba(212,160,44,0.07) 0%, transparent 60%),
-          radial-gradient(ellipse 60% 40% at 80% 90%, rgba(212,160,44,0.05) 0%, transparent 60%);
-        animation: mobileglow 10s ease-in-out infinite alternate;
-        pointer-events: none;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 28%;
+        opacity: 0.50;
         z-index: 0;
-      }
-      @keyframes mobileglow {
-        0%   { opacity: 0.6; }
-        100% { opacity: 1.0; }
+        pointer-events: none;
       }
 
-      /* subtle floating specks on mobile too */
-      body::after {
-        content: '';
+      /* dark overlay so text stays readable */
+      #mobile-overlay {
+        display: block;
         position: fixed;
         inset: 0;
-        background: transparent;
+        background: rgba(11,13,15,0.45);
+        z-index: 1;
         pointer-events: none;
-        z-index: 0;
       }
 
       .page {
@@ -610,12 +608,17 @@
         margin-right: auto;
         padding: 2.5rem 1.2rem 4rem;
         position: relative;
-        z-index: 1;
+        z-index: 2;
       }
     }
 
+    /* hide mobile elements on desktop */
+    @media (min-width: 861px) {
+      #mobile-bg, #mobile-overlay { display: none; }
+    }
+
     @media (max-width: 1100px) and (min-width: 861px) {
-      :root { --banner-w: 160px; }
+      :root { --banner-w: 200px; }
     }
 
     @media (max-width: 640px) {
@@ -633,6 +636,12 @@
   </style>
 </head>
 <body>
+
+  <!-- mobile full-screen background video (hidden on desktop via CSS) -->
+  <video id="mobile-bg" autoplay loop muted playsinline>
+    <source src="background.mp4" type="video/mp4">
+  </video>
+  <div id="mobile-overlay"></div>
 
   <!-- LEFT BANNER -->
   <aside class="banner banner-left" aria-hidden="true">
@@ -986,25 +995,59 @@
   </div>
 
   <script>
-    /* ── parallax scroll on banner videos ── */
-    const vidLeft  = document.getElementById('vid-left');
-    const vidRight = document.getElementById('vid-right');
+    /* ── video references ── */
+    const vidLeft   = document.getElementById('vid-left');
+    const vidRight  = document.getElementById('vid-right');
+    const vidMobile = document.getElementById('mobile-bg');
+    const allVids   = [vidLeft, vidRight, vidMobile].filter(Boolean);
 
+    /* ── force play + sync all videos ── */
+    function forcePlay() {
+      /* pick a reference time — sync everyone to vid-left if loaded, else 0 */
+      const refTime = (vidLeft && vidLeft.readyState >= 1) ? vidLeft.currentTime : 0;
+      allVids.forEach(v => {
+        /* sync time so they're frame-identical */
+        if (Math.abs(v.currentTime - refTime) > 0.1) v.currentTime = refTime;
+        const p = v.play();
+        if (p !== undefined) p.catch(() => {/* browser blocked, muted autoplay should still work */});
+      });
+    }
+
+    /* try immediately */
+    forcePlay();
+
+    /* also fire once the DOM is fully interactive, and after first user gesture */
+    document.addEventListener('DOMContentLoaded', forcePlay);
+    document.addEventListener('click', forcePlay, { once: true });
+    document.addEventListener('touchstart', forcePlay, { once: true });
+
+    /* keep them in sync — drift check every 2s */
+    setInterval(() => {
+      if (!vidLeft || !vidRight) return;
+      const diff = Math.abs(vidLeft.currentTime - vidRight.currentTime);
+      if (diff > 0.15) vidRight.currentTime = vidLeft.currentTime;
+      if (vidMobile) {
+        const diffM = Math.abs(vidLeft.currentTime - vidMobile.currentTime);
+        if (diffM > 0.15) vidMobile.currentTime = vidLeft.currentTime;
+      }
+    }, 2000);
+
+    /* ── parallax on desktop banners ── */
     function onScroll() {
-      const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight);
-      const shift = pct * -8; // max 8% upward shift
+      const pct   = window.scrollY / Math.max(1, document.body.scrollHeight - window.innerHeight);
+      const shift = pct * -8;
       if (vidLeft)  vidLeft.style.transform  = `translateY(${shift}%)`;
       if (vidRight) vidRight.style.transform = `translateY(${shift}%)`;
     }
-
     window.addEventListener('scroll', onScroll, { passive: true });
 
     /* ── audio toggle ── */
     function toggleAudio() {
-      const vid   = document.getElementById('vid-right');
+      const vid   = vidRight;
       const btn   = document.getElementById('audio-btn');
       const icon  = document.getElementById('audio-icon');
       const label = document.getElementById('audio-label');
+      if (!vid) return;
       if (vid.muted) {
         vid.muted  = false;
         vid.volume = 1.0;
